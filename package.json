@@ -5,7 +5,7 @@
   "author"          : "Syrio",
   "repository"      : { "type" : "git", "url" : "git://github.com/syrio/node-statsd-instrument.git" },
   "dependencies"    : { "node-statsd" : "0.0.x" },
-  "devDependencies" : { "coffee-script": "1.1.x", "vows": ">=0.5.10", "sinon" : "1.1.x" },
+  "devDependencies" : { "coffee-script": "1.6.x", "vows": ">=0.5.10", "sinon" : "1.1.x" },
   "main"            : "lib/statsd-instrument.js",
   "directories"     : { "test": "./test/spec" },
   "scripts"         : { "test": "vows test/spec/*.js" },

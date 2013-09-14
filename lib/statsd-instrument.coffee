@@ -43,5 +43,18 @@ class Instrumentation
       return_value
     obj
 
+  measure_async: (obj, method_name, counter_name) ->
+    org = obj[method_name]
+    obj[method_name] = =>
+      start = (new Date).getTime()
+      args = Array.prototype.slice.call(arguments)
+      callback = args.pop()
+      args.push (err, return_values)=>
+        end = (new Date).getTime()
+        @client.timing(counter_name, end - start)
+        callback(err, return_values)
+      org.apply(this, args)
+    obj
+
 exports.StatsDInstrumentation = Instrumentation
 exports.StatsD = StatsD

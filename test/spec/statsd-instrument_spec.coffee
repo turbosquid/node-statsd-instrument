@@ -20,9 +20,14 @@ class User
   deleteProfile: ->
     true
 
-  friendsList: ->
+  friendsList: (clock) ->
+    clock.tick(10)
     true
     
+  friendsListAsync: (cb) ->
+    setTimeout((-> cb(null, true)), 500)
+    true
+
   changePassword: (existing_password, new_password) ->
     throw new Error('wrong existing password') if existing_password != 'correct-password'
     true
@@ -105,15 +110,30 @@ vows.describe('Instrumentation')
                   'should not increment the counter of production users leaving the service' : ->
                       assert.isFalse @increment_spy.calledWith('leaving.users')
               'getting list of friends' :
+                'synchronously' :
                   topic: ->
+                    @clock = sinon.useFakeTimers()
                     @timing_spy = sinon.spy()
                     instrument = new StatsDInstrumentation({ timing: @timing_spy })
                     instrument.measure(User.prototype, 'friendsList', 'friends.fetching')
-                    times = [100, 99]
-                    Date.prototype.getTime = -> times.pop()
                     user = new User()
-                    user.friendsList()
+                    user.friendsList(@clock)
+                  teardown: ->
+                    @clock.restore()
                   'should time the fetching to see if caching is needed' : ->
-                      assert.isTrue @timing_spy.calledWith('friends.fetching', 100-99)
-                    
+                    assert.isTrue @timing_spy.calledWith('friends.fetching', 10)
+                'asynchronously' :
+                  topic: ->
+                    @clock = sinon.useFakeTimers()
+                    @timing_spy = sinon.spy()
+                    instrument = new StatsDInstrumentation({ timing: @timing_spy })
+                    instrument.measure_async(User.prototype, 'friendsListAsync', 'friends.fetching')
+                    user = new User()
+                    user.friendsListAsync @callback
+                    @clock.tick 500
+                    undefined
+                  teardown: ->
+                    @clock.restore()
+                  'should time the fetching to see if caching is needed' : (err, val)->
+                    assert.isTrue @timing_spy.calledWith('friends.fetching', 500)
  ).export module
